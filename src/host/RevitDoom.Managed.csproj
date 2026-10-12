@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>RevitDoom.Managed</AssemblyName>
+    <RootNamespace>RevitDoom</RootNamespace>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Version>4.0.0</Version>
+    <NoWarn>CS0162;CS0168;CS0219;CS0414;CS0649;CS0169;CS8981</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../mdsrc/**/*.cs" />
+  </ItemGroup>
+</Project>

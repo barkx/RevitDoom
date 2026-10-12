@@ -1,0 +1,6 @@
+* text=auto
+
+*.dll  binary
+*.wad  binary
+*.WAD  binary
+*.png  binary

@@ -1,0 +1,75 @@
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
+using RevitDoom;
+using ManagedDoom;
+
+class Program
+{
+    static IntPtr buf = Marshal.AllocHGlobal(640 * 400 * 4);
+    static void Snap(DoomHost h, string path)
+    {
+        if (!h.RenderTo(buf, 640 * 4)) { Console.WriteLine("render failed " + h.Error); return; }
+        var px = new byte[640 * 400 * 4]; Marshal.Copy(buf, px, 0, px.Length);
+        using var f = File.Create(path);
+        var hdr = System.Text.Encoding.ASCII.GetBytes("P6\n640 400\n255\n"); f.Write(hdr);
+        for (int i = 0; i < 640 * 400; i++) { f.WriteByte(px[4*i+2]); f.WriteByte(px[4*i+1]); f.WriteByte(px[4*i]); }
+    }
+    static void Run(DoomHost h, double seconds)
+    {
+        var end = DateTime.Now.AddSeconds(seconds);
+        while (DateTime.Now < end && h.Running) { h.Advance(); Thread.Sleep(5); }
+    }
+    static void Tap(DoomHost h, string k, double hold = 0.1) { h.Key(k, true); Run(h, hold); h.Key(k, false); Run(h, 0.15); }
+
+    static int Main(string[] a)
+    {
+        string wad = a[0], outDir = a[1]; Directory.CreateDirectory(outDir);
+        var h = new DoomHost(wad, Path.Combine(outDir, "data"), sound: true);
+        bool ok = h.Start();
+        foreach (var l in h.DrainLog()) Console.WriteLine(l);
+        Console.WriteLine("start=" + ok + " state=" + h.State + " sound=" + h.SoundEnabled + " err=" + h.Error);
+        if (!ok) return 1;
+        Run(h, 1.5); Snap(h, Path.Combine(outDir, "1_title.ppm"));
+        Tap(h, "Escape"); Tap(h, "Enter"); Tap(h, "Enter"); Tap(h, "Enter");
+        Run(h, 2.0); Snap(h, Path.Combine(outDir, "2_ingame.ppm"));
+        Console.WriteLine("mouseWanted=" + h.MouseWanted);
+        h.Key("W", true); for (int i = 0; i < 20; i++) { h.MouseMove(15, 0); Run(h, 0.03); } h.Key("W", false);
+        h.Key("LControl", true); Run(h, 0.6); h.Key("LControl", false);
+        foreach (var c in "iddqd") Tap(h, c.ToString().ToUpper(), 0.05);
+        Run(h, 0.3); Snap(h, Path.Combine(outDir, "3_moved.ppm"));
+        Console.WriteLine("tics=" + h.Tics + " frames=" + h.Frames + " state=" + h.State);
+        // quit via menu
+        Tap(h, "Escape"); Tap(h, "Up"); Tap(h, "Enter"); Tap(h, "Y"); Run(h, 4);
+        Console.WriteLine("after quit: state=" + h.State + " msg=" + h.QuitMessage);
+        h.Dispose();
+        foreach (var l in h.DrainLog()) Console.WriteLine(l);
+
+        // bad wad -> clean error
+        var bad = new DoomHost("/nope.wad", Path.Combine(outDir, "data2"), false);
+        Console.WriteLine("bad start=" + bad.Start() + " err=" + bad.Error);
+
+        // restart in same process
+        var h2 = new DoomHost(wad, Path.Combine(outDir, "data"), false);
+        Console.WriteLine("restart=" + h2.Start()); Run(h2, 0.5); Console.WriteLine("restart tics=" + h2.Tics);
+
+        // mixer -> wav
+        var content = new GameContent(new CommandLineArgs(new[] { "-iwad", wad }));
+        var mix = new MixerSound(new Config(), content, false);
+        mix.StartSound(Sfx.PISTOL); mix.Update();
+        var pcm = new short[MixerSound.OutputRate * 2 / 2];
+        mix.Mix(pcm, pcm.Length / 2);
+        using (var w = new BinaryWriter(File.Create(Path.Combine(outDir, "pistol.wav"))))
+        {
+            int bytes = pcm.Length * 2;
+            w.Write("RIFF".ToCharArray()); w.Write(36 + bytes); w.Write("WAVEfmt ".ToCharArray());
+            w.Write(16); w.Write((short)1); w.Write((short)2); w.Write(MixerSound.OutputRate); w.Write(MixerSound.OutputRate * 4);
+            w.Write((short)4); w.Write((short)16); w.Write("data".ToCharArray()); w.Write(bytes);
+            foreach (var s in pcm) w.Write(s);
+        }
+        int peak = 0; foreach (var s in pcm) peak = Math.Max(peak, Math.Abs((int)s));
+        Console.WriteLine("mixer peak=" + peak);
+        return 0;
+    }
+}

@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RevitDoom · DOOM inside Revit</title>
+<meta name="description" content="RevitDoom is a pyRevit extension that plays the real DOOM inside Autodesk Revit.">
+<meta property="og:title" content="RevitDoom · DOOM inside Revit">
+<meta property="og:description" content="Play the real DOOM in a window inside Autodesk Revit. Free, open source, GPL-2.0.">
+<link rel="icon" href="assets/icon-doom.png">
+<style>
+:root{
+  --bg:#0d0b0a;--bg2:#161210;--panel:#1d1815;--line:#3a2e27;
+  --ink:#f3ece6;--muted:#b3a59a;--red:#e2361b;--orange:#ff8a1f;--yellow:#ffd23f;--green:#5ad16a;
+  --mono:Consolas,"JetBrains Mono",Menlo,monospace;
+  --display:Impact,"Haettenschweiler","Arial Narrow Bold","Arial Black",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",system-ui,-apple-system,sans-serif}
+a{color:var(--orange)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+/* nav */
+.nav{position:sticky;top:0;z-index:10;background:rgba(13,11,10,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:18px;height:58px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:22px;letter-spacing:.04em;color:var(--ink);text-decoration:none}
+.brand img{width:28px;height:28px;image-rendering:pixelated}
+.nav nav{margin-left:auto;display:flex;gap:18px;flex-wrap:wrap}
+.nav nav a{color:var(--muted);text-decoration:none;font-size:14px}
+.nav nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:8px;font-weight:600;text-decoration:none;border:1px solid transparent;font-size:15px}
+.btn.primary{background:var(--red);color:#fff;box-shadow:0 0 0 1px #ff6a4a inset,0 8px 30px -10px rgba(226,54,27,.8)}
+.btn.primary:hover{background:#f04425}
+.btn.ghost{border-color:var(--line);color:var(--ink);background:var(--panel)}
+.btn.ghost:hover{border-color:var(--orange)}
+.nav .btn{padding:7px 12px;font-size:13px}
+/* hero */
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line);
+  background:radial-gradient(900px 420px at 75% 20%,rgba(226,54,27,.28),transparent 70%),radial-gradient(600px 300px at 10% 90%,rgba(255,138,31,.12),transparent 70%)}
+.hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:44px;align-items:center;padding-top:72px;padding-bottom:72px}
+.kicker{font-family:var(--mono);font-size:13px;color:var(--orange);letter-spacing:.12em;text-transform:uppercase}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(46px,7vw,84px);line-height:.95;margin:12px 0 18px;letter-spacing:.01em;
+  background:linear-gradient(180deg,var(--yellow) 0%,var(--orange) 45%,var(--red) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 #5a1208)}
+.lead{font-size:19px;color:#e2d6cc;max-width:540px;margin:0 0 26px}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;font-size:13px;color:var(--muted);font-family:var(--mono)}
+.meta span::before{content:"▸ ";color:var(--red)}
+/* mock revit window */
+.mock{background:#24201d;border:1px solid #4a3c33;border-radius:10px;box-shadow:0 30px 80px -20px #000,0 0 0 1px #000;overflow:hidden}
+.mock .bar{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#2e2925;border-bottom:1px solid #43372f}
+.mock .bar i{width:10px;height:10px;border-radius:50%;background:#5a4c43;display:block}
+.mock .bar b{margin-left:8px;font:600 12px var(--mono);color:#cbbcb0}
+.ribbon{display:flex;gap:2px;padding:0 10px;background:#2a2522;font-size:12px;color:#a8998d;border-bottom:1px solid #43372f}
+.ribbon span{padding:6px 10px}
+.ribbon span.on{background:#3a322c;color:#fff;border-top:2px solid var(--red)}
+.panel-row{display:flex;gap:10px;align-items:flex-end;padding:10px 12px;background:#3a322c;border-bottom:1px solid #4b3f37}
+.tool{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#efe5dc;padding:4px 8px;border-radius:4px}
+.tool img{width:36px;height:36px;image-rendering:pixelated}
+.tool.hot{background:#54463d;outline:1px solid var(--orange)}
+.panel-name{margin-left:auto;font-size:11px;color:#a8998d;align-self:flex-end}
+.viewport{position:relative;aspect-ratio:4/3;background:#000}
+.viewport img{width:100%;height:100%;display:block;image-rendering:pixelated}
+.tag3d{position:absolute;top:10px;left:10px;font:600 11px var(--mono);color:#fff;background:rgba(226,54,27,.85);padding:3px 7px;border-radius:4px}
+/* screenshots */
+.shots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.shots figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.shots img{display:block;width:100%;height:auto;aspect-ratio:4/3;image-rendering:pixelated;cursor:zoom-in}
+.shots figcaption{padding:9px 12px;font-size:13px;color:var(--muted)}
+.lightbox{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+.lightbox.on{display:flex}
+.lightbox img{max-width:min(1280px,100%);max-height:100%;image-rendering:pixelated;border:1px solid var(--line)}
+/* sections */
+section{padding:84px 0;border-bottom:1px solid var(--line)}
+h2{font-family:var(--display);font-weight:400;font-size:clamp(32px,4.4vw,48px);margin:0 0 10px;letter-spacing:.02em}
+h2 .acc{color:var(--red)}
+.sub{color:var(--muted);max-width:700px;margin:0 0 36px;font-size:17px}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+.feat .ic{font:700 13px var(--mono);color:var(--orange);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.feat h4{margin:0 0 6px;font-size:17px}
+.feat p{margin:0;color:var(--muted);font-size:14.5px}
+.safe{margin-top:22px;display:flex;gap:14px;align-items:flex-start;background:rgba(90,209,106,.08);border:1px solid rgba(90,209,106,.35);border-radius:12px;padding:16px 18px}
+.safe b{color:var(--green)}
+.ctrl{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.ctrl.one{grid-template-columns:minmax(0,640px)}
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+caption{text-align:left;font:400 22px var(--display);letter-spacing:.03em;padding:0 0 10px}
+th,td{padding:9px 14px;border-bottom:1px solid var(--line);text-align:left;font-size:14.5px}
+th{color:var(--muted);font-weight:500;width:46%}
+tr:last-child th,tr:last-child td{border-bottom:0}
+kbd{font:600 12.5px var(--mono);background:#2c2420;border:1px solid #4a3c33;border-bottom-width:3px;border-radius:5px;padding:1px 6px;color:#fff;white-space:nowrap}
+.install{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:24px;align-items:start}
+.install>*,.hero .wrap>*,ol.big{margin:0;padding:0;list-style:none;counter-reset:i}
+ol.big li{counter-increment:i;position:relative;padding:0 0 22px 52px}
+ol.big li::before{content:counter(i);position:absolute;left:0;top:0;width:34px;height:34px;border-radius:8px;background:var(--red);color:#fff;font:400 20px/34px var(--display);text-align:center}
+ol.big h4{margin:4px 0 4px;font-size:17px}
+ol.big p{margin:0 0 8px;color:var(--muted)}
+.code{position:relative;background:#0a0807;border:1px solid var(--line);border-radius:10px;padding:14px 16px;font:14px/1.5 var(--mono);color:#ffd9b0;overflow-x:auto;white-space:pre}
+.copy{position:absolute;top:8px;right:8px;font:600 12px var(--mono);background:#2c2420;color:var(--ink);border:1px solid #4a3c33;border-radius:6px;padding:4px 8px;cursor:pointer}
+.copy:hover{border-color:var(--orange)}
+.req{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+.req h4{margin:0 0 10px;font-family:var(--display);font-weight:400;font-size:22px;letter-spacing:.03em}
+.req dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0}
+.req dt{color:var(--muted)} .req dd{margin:0;min-width:0}
+.note code,.req code,ol.big code{overflow-wrap:anywhere}
+.ribbon{overflow:hidden}
+.note{margin-top:14px;font-size:14px;color:var(--muted)}
+.credits{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.credit{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.credit h4{margin:0 0 4px}
+.credit p{margin:0;color:var(--muted);font-size:14px}
+.credit,.feat{min-width:0}.credit a{overflow-wrap:anywhere}
+footer{padding:36px 0 56px;color:var(--muted);font-size:13px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 26px;justify-content:space-between}
+@media (max-width:900px){
+  .shots{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero .wrap,.ctrl,.install{grid-template-columns:minmax(0,1fr)}
+  .features,.credits{grid-template-columns:1fr 1fr}
+  .nav nav{display:none}
+}
+@media (max-width:560px){
+  .wrap{padding:0 16px}
+  .features,.credits{grid-template-columns:minmax(0,1fr)}
+  section{padding:60px 0}
+  .hero .wrap{padding-top:44px;padding-bottom:52px}
+  .lead{font-size:17px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .flicker{animation:fl 3.2s infinite}
+  @keyframes fl{0%,100%{opacity:1}47%{opacity:1}48%{opacity:.55}50%{opacity:1}72%{opacity:.8}73%{opacity:1}}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/icon-doom.png" alt="">REVITDOOM</a>
+    <nav>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#features">Features</a>
+      <a href="#controls">Controls</a>
+      <a href="#install">Install</a>
+      <a href="#credits">Credits</a>
+    </nav>
+    <a class="btn ghost" href="https://github.com/barkx/RevitDoom">GitHub</a>
+  </div>
+</header>
+
+<div class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <div class="kicker">pyRevit extension · Revit 2025+</div>
+      <h1>DOOM<br>INSIDE REVIT</h1>
+      <p class="lead">One button on your Revit ribbon, and the real DOOM engine runs in a window right inside Revit, with sound, savegames and cheats. Your model stays untouched.</p>
+      <div class="cta">
+        <a class="btn primary" href="#install">Install RevitDoom</a>
+        <a class="btn ghost" href="https://github.com/barkx/RevitDoom">View on GitHub</a>
+      </div>
+      <div class="meta"><span>Free &amp; open source</span><span>GPL-2.0</span><span>Freedoom included</span></div>
+    </div>
+
+    <div class="mock" aria-label="The DOOM button on the DoomRevit tab, with a real frame from the game">
+      <div class="bar"><i></i><i></i><i></i><b>Autodesk Revit 2025 · Office_Building.rvt</b></div>
+      <div class="ribbon"><span>Architecture</span><span>Insert</span><span>View</span><span>pyRevit</span><span class="on">DoomRevit</span></div>
+      <div class="panel-row">
+        <div class="tool hot"><img src="assets/icon-doom.png" alt="">DOOM</div>
+        <div class="panel-name">Games</div>
+      </div>
+      <div class="viewport">
+        <img src="assets/screenshots/e1m1.png" width="640" height="480" alt="Freedoom E1M1 running in RevitDoom">
+        <div class="tag3d">E1M1 · Freedoom</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section id="screenshots">
+  <div class="wrap">
+    <h2><span class="acc">Screenshots</span></h2>
+    <p class="sub">Real frames rendered by RevitDoom's engine with the bundled Freedoom: Phase 1. Click to enlarge.</p>
+    <div class="shots">
+      <figure><img src="assets/screenshots/title.png" width="640" height="480" alt="Freedoom title screen" loading="lazy"><figcaption>Title screen</figcaption></figure>
+      <figure><img src="assets/screenshots/e1m1.png" width="640" height="480" alt="Start of E1M1" loading="lazy"><figcaption>E1M1, first room</figcaption></figure>
+      <figure><img src="assets/screenshots/corridor.png" width="640" height="480" alt="A long corridor in E1M1" loading="lazy"><figcaption>Exploring E1M1</figcaption></figure>
+      <figure><img src="assets/screenshots/menu.png" width="640" height="480" alt="The main menu over the game" loading="lazy"><figcaption>Menu: save, load, options</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2>The real game, <span class="acc">inside Revit</span></h2>
+    <p class="sub">RevitDoom adds a <b>DoomRevit ▸ Games</b> panel to the ribbon with one button. Click <b>DOOM</b> and play.</p>
+    <div class="features">
+      <div class="feat"><div class="ic">Engine</div><h4>Managed Doom</h4><p>A faithful C# port of the original DOOM engine, compiled for .NET 8, the runtime Revit 2025+ uses.</p></div>
+      <div class="feat"><div class="ic">Timing</div><h4>Original 35 Hz</h4><p>The game runs at the original 35 updates per second, drawn with interpolation at 640×400 and shown at 4:3.</p></div>
+      <div class="feat"><div class="ic">Sound</div><h4>Positional stereo</h4><p>Sound effects play through the Windows waveOut API. If audio can't start, the game keeps running without it.</p></div>
+      <div class="feat"><div class="ic">Safe</div><h4>Can't crash Revit</h4><p>Pure managed code. If the engine fails you get a message in the console; Revit keeps working.</p></div>
+      <div class="feat"><div class="ic">WADs</div><h4>Freedoom included</h4><p>Plays free Freedoom out of the box. Drop in DOOM.WAD or DOOM2.WAD, or Shift+Click to pick any WAD.</p></div>
+      <div class="feat"><div class="ic">Saves</div><h4>Savegames &amp; cheats</h4><p>Savegames and settings live in <code>%APPDATA%\RevitDoom</code>. <code>iddqd</code> and <code>idkfa</code> work.</p></div>
+    </div>
+    <div class="safe"><span>✔</span><div><b>Your model is left untouched.</b> The game runs in its own window inside Revit and never creates or changes elements.</div></div>
+  </div>
+</section>
+
+
+<section id="controls">
+  <div class="wrap">
+    <h2><span class="acc">Controls</span></h2>
+    <p class="sub">Click inside the game to capture the mouse. Esc releases it.</p>
+    <div class="ctrl one">
+      <table>
+        <caption>DOOM</caption>
+        <tr><th>Move</th><td><kbd>W</kbd> <kbd>S</kbd> or <kbd>↑</kbd> <kbd>↓</kbd></td></tr>
+        <tr><th>Strafe</th><td><kbd>A</kbd> <kbd>D</kbd>, or <kbd>Alt</kbd> + turn</td></tr>
+        <tr><th>Turn</th><td><kbd>←</kbd> <kbd>→</kbd> or mouse</td></tr>
+        <tr><th>Fire</th><td><kbd>Ctrl</kbd> or left mouse</td></tr>
+        <tr><th>Use / open</th><td><kbd>Space</kbd> or right mouse</td></tr>
+        <tr><th>Walk</th><td><kbd>Shift</kbd> (always-run is on)</td></tr>
+        <tr><th>Weapons</th><td><kbd>1</kbd> – <kbd>7</kbd></td></tr>
+        <tr><th>Automap</th><td><kbd>Tab</kbd></td></tr>
+        <tr><th>Menu</th><td><kbd>Esc</kbd></td></tr>
+        <tr><th>Console</th><td><kbd>F12</kbd> or <kbd>`</kbd></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2><span class="acc">Install</span> in three steps</h2>
+    <p class="sub">You need pyRevit. If you don't have it, install it from <a href="https://github.com/pyRevitLabs/pyRevit/releases">pyRevitLabs/pyRevit</a> and start Revit once.</p>
+    <div class="install">
+      <ol class="big">
+        <li>
+          <h4>Get the files</h4>
+          <p>Clone the repository, or use <b>Code ▸ Download ZIP</b> on GitHub and extract it (right-click the ZIP ▸ Properties ▸ Unblock first).</p>
+          <div class="code"><button class="copy" data-copy="git clone https://github.com/barkx/RevitDoom.git">Copy</button>cd C:\RevitExtensions
+git clone https://github.com/barkx/RevitDoom.git</div>
+        </li>
+        <li>
+          <h4>Add it to pyRevit</h4>
+          <p>In Revit: <b>pyRevit ▸ Settings ▸ Custom Extension Directories</b>. Add the folder that <i>contains</i> <code>RevitDoom.extension</code>, for example <code>C:\RevitExtensions\RevitDoom</code>.</p>
+        </li>
+        <li>
+          <h4>Reload and play</h4>
+          <p>Click <b>Save Settings and Reload</b>. Open the <b>DoomRevit</b> tab and click <b>DOOM</b>.</p>
+        </li>
+      </ol>
+      <div>
+        <div class="req">
+          <h4>Requirements</h4>
+          <dl>
+            <dt>Revit</dt><dd>2025 or newer (.NET 8)</dd>
+            <dt>pyRevit</dt><dd>IronPython 2.7 or 3.4 engine</dd>
+            <dt>Windows</dt><dd>10 or 11, 64-bit</dd>
+            <dt>Game data</dt><dd>Freedoom included</dd>
+          </dl>
+          <p class="note">To play the original game, copy <code>DOOM.WAD</code> or <code>DOOM2.WAD</code> into <code>RevitDoom.extension\wads\</code> or <code>%APPDATA%\RevitDoom\</code>. Shift+Click DOOM to pick any WAD.</p>
+        </div>
+        <p class="note">Updating, uninstalling and troubleshooting: see <a href="https://github.com/barkx/RevitDoom/blob/main/INSTALL.md">INSTALL.md</a>. Logs are in <code>%APPDATA%\RevitDoom\</code>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="credits">
+  <div class="wrap">
+    <h2><span class="acc">Credits</span></h2>
+    <p class="sub">RevitDoom stands on the shoulders of these open-source projects.</p>
+    <div class="credits">
+      <div class="credit"><h4>Managed Doom</h4><p>C# port of the DOOM engine by Nobuaki Tanaka. GPL-2.0. <a href="https://github.com/sinshu/managed-doom">github.com/sinshu/managed-doom</a></p></div>
+      <div class="credit"><h4>Freedoom</h4><p>Free game data compatible with DOOM, bundled as Phase 1. BSD licence. <a href="https://freedoom.github.io">freedoom.github.io</a></p></div>
+      <div class="credit"><h4>pyRevit</h4><p>The Revit add-in platform that loads the extension. <a href="https://github.com/pyRevitLabs/pyRevit">github.com/pyRevitLabs/pyRevit</a></p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>RevitDoom by Marcel Žnidarič · GPL-2.0 · <a href="https://github.com/barkx/RevitDoom">github.com/barkx/RevitDoom</a></span>
+    <span>DOOM is a trademark of id Software. Revit is a trademark of Autodesk. Not affiliated with either.</span>
+  </div>
+</footer>
+
+<div class="lightbox" id="lb" role="dialog" aria-label="Screenshot"><img alt=""></div>
+<script>
+(function(){var lb=document.getElementById('lb'),im=lb.querySelector('img');
+document.querySelectorAll('.shots img').forEach(function(i){i.addEventListener('click',function(){im.src=i.src;im.alt=i.alt;lb.classList.add('on')})});
+lb.addEventListener('click',function(){lb.classList.remove('on')});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')lb.classList.remove('on')});})();
+document.querySelectorAll('.copy').forEach(function(b){
+  b.addEventListener('click',function(){
+    var t=b.getAttribute('data-copy');
+    var done=function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},1400)};
+    if(navigator.clipboard){navigator.clipboard.writeText(t).then(done,function(){})}
+  });
+});
+</script>
+</body>
+</html>

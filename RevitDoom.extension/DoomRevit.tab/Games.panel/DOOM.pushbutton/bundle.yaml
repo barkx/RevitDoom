@@ -1,0 +1,6 @@
+title: DOOM
+tooltip: >-
+  Play real DOOM (Managed Doom engine) inside Revit.
+  Click to play, Shift+Click to choose a WAD.
+  Saves go to %APPDATA%\RevitDoom.
+author: Marcel Žnidarič
