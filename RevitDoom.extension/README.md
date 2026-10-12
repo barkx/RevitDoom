@@ -1,6 +1,6 @@
 # RevitDoom: DOOM inside Revit (pyRevit)
 
-RevitDoom plays DOOM in a window inside Revit, with sound effects. You start it from **DoomRevit ▸ Games ▸ DOOM**.
+RevitDoom runs the original DOOM engine in a window inside Revit, with sound effects, savegames and cheats. Start it from **DoomRevit ▸ Games ▸ DOOM**. Freedoom is bundled so it works out of the box, and your own `DOOM.WAD` is used if you add one. Your model is never changed.
 
 ## Engine (v4)
 
@@ -24,7 +24,7 @@ Copy `RevitDoom.extension` into a pyRevit extensions folder, then reload pyRevit
 
 - Freedoom: Phase 1 (BSD licence) is bundled in `wads/`.
 - To play original DOOM, put `DOOM.WAD`, `DOOM2.WAD` or `DOOM1.WAD` into `wads\` or `%APPDATA%\RevitDoom\`. Original WADs take priority over Freedoom.
-- **Shift+Click** the button to pick a WAD file yourself.
+- **Shift+Click** the button to pick a WAD file yourself. Your choice is remembered for the next click.
 
 ## Controls
 

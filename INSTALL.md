@@ -47,7 +47,7 @@ Copy `DOOM.WAD`, `DOOM2.WAD` or `DOOM1.WAD` (the shareware episode) into either:
 - `RevitDoom.extension\wads\`, or
 - `%APPDATA%\RevitDoom\`
 
-Original WADs are used before Freedoom. **Shift+Click** the DOOM button to choose a WAD file yourself.
+Original WADs are preferred over Freedoom. **Shift+Click** the DOOM button to choose a WAD file yourself; that choice is remembered and used on later clicks until you pick another.
 
 ## Updating
 

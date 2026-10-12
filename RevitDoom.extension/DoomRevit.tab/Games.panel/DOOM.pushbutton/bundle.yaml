@@ -1,6 +1,10 @@
 title: DOOM
-tooltip: >-
-  Play real DOOM (Managed Doom engine) inside Revit.
-  Click to play, Shift+Click to choose a WAD.
-  Saves go to %APPDATA%\RevitDoom.
+tooltip: |-
+  Play the original DOOM in a window inside Revit. Your model is not changed.
+
+  Click: start playing (your DOOM.WAD if installed, otherwise the bundled Freedoom).
+  Shift+Click: choose a different WAD file.
+
+  Click the game to capture the mouse, Esc to release it, F12 for the console.
+  Savegames and settings: %APPDATA%\RevitDoom
 author: Marcel Žnidarič

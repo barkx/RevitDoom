@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Play DOOM inside Revit.
 
-Click: play the best IWAD found in the extension's wads folder
-       (DOOM.WAD / DOOM2.WAD / DOOM1.WAD ... falls back to bundled Freedoom).
-Shift+Click: pick any IWAD file.
+Click: play the WAD last picked with Shift+Click, otherwise the best IWAD
+       found in wads/ or %APPDATA%\\RevitDoom (DOOM.WAD / DOOM2.WAD /
+       DOOM1.WAD ..., falling back to the bundled Freedoom).
+Shift+Click: pick any IWAD file and remember it.
 """
 __title__ = 'DOOM'
 __author__ = 'Marcel Žnidarič'

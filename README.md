@@ -24,13 +24,15 @@
 
 ## What it does
 
-RevitDoom adds a **DoomRevit** tab to the Revit ribbon with a **DOOM** button. Click it and the full DOOM game runs in a window inside Revit, with sound effects. It uses Managed Doom, a C# port of the original engine. Freedoom is included, and you can use your own `DOOM.WAD`. Your model isn't touched: the game runs in its own window.
+RevitDoom puts a **DOOM** button on your Revit ribbon. Click it and the complete game opens in its own window inside Revit: every level, every monster, savegames and cheats. It isn't a video or a remake. It's the original DOOM engine, ported to C# by the Managed Doom project and running on the same .NET 8 runtime as Revit 2025+.
 
-- Runs the real DOOM engine at the original 35 updates per second, drawn at 640×400 and shown at 4:3.
-- Pure managed code: if the engine fails you get a message in the console. Revit can't crash or hang because of the game.
-- Sound effects in positional stereo (no music).
-- Savegames and settings go to `%APPDATA%\RevitDoom\`.
-- Cheats work (`iddqd`, `idkfa`, …).
+It works out of the box with the free **Freedoom** game data. If you own DOOM or DOOM II, drop in your WAD and play the original. Your model is never touched; close the window and you're back to work.
+
+- **The real engine.** Runs at DOOM's original 35 game updates per second, rendered smoothly at 640×400 and shown at the classic 4:3 aspect.
+- **Safe for Revit.** 100% managed code with no native DLLs. If the engine hits an error, you see a message in the built-in console and Revit carries on.
+- **Sound.** Sound effects in positional stereo. Music isn't supported yet.
+- **Your progress is kept.** Savegames and settings are stored in `%APPDATA%\RevitDoom\`.
+- **Cheats work.** `iddqd`, `idkfa` and the rest.
 
 ### Screenshots
 
@@ -73,8 +75,8 @@ Full instructions, updating, uninstalling and troubleshooting: **[INSTALL.md](IN
 ## WADs
 
 - **Freedoom: Phase 1** (BSD licence) is included in `RevitDoom.extension/wads/`.
-- To play the original game, put `DOOM.WAD`, `DOOM2.WAD` or `DOOM1.WAD` into `RevitDoom.extension\wads\` or `%APPDATA%\RevitDoom\`. Original WADs are used first.
-- **Shift+Click** the DOOM button to pick any WAD file.
+- To play the original game, put `DOOM.WAD`, `DOOM2.WAD` or `DOOM1.WAD` into `RevitDoom.extension\wads\` or `%APPDATA%\RevitDoom\`. Original WADs are preferred over Freedoom.
+- **Shift+Click** the DOOM button to pick any WAD file. The WAD you pick is remembered and used on the next plain click.
 
 ## Repository layout
 
